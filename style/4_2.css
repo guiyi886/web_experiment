@@ -1,0 +1,64 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.logo {
+  /*水平垂直居中*/
+  line-height: 100px;
+  text-align: center;
+
+  background-color: red;
+  font-size: 24px;
+}
+
+.nav {
+  height: 50px;
+  background-color: #FFC107;
+  display: flex;
+  justify-content: center; /* 水平居中 */
+  align-items: center; /* 垂直居中 */
+
+  a {
+    margin: 10px;
+    text-decoration: none;
+  }
+}
+
+.content {
+  display: flex;
+}
+
+.content div {
+  flex: 1;
+  padding: 10px;
+}
+
+.content-left {
+  background-color: green;
+}
+
+.content-center-left {
+  background-color: blue;
+}
+
+.content-center-right {
+  background-color: purple;
+}
+
+.content-right {
+  background-color: #673AB7;
+}
+
+.footer {
+  height: 50px;
+  background-color: #607D8B;
+  line-height: 50px;
+  text-align: center;
+}
