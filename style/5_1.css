@@ -1,0 +1,52 @@
+.loader {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 5px solid #4caf50;
+  border-top: 5px solid white;
+  animation: spin 2s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.progress-bar {
+  width: 200px;
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+}
+
+.progress {
+  height: 100%;
+  background-color: #4caf50;
+  animation: fill 5s forwards;
+}
+
+@keyframes fill {
+  0% {
+    width: 0;
+  }
+  60% {
+    width: 90%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+/*
+1. 加载元素(.loader)宽高为50px*50px，圆形。边框5px实线，颜色#4caf50；单独设置边框顶部为5px实线白色。
+2. 定义旋转动画（.spin）0%时旋转角度为0度，100%时旋转角度为360度。
+3. 加载元素(.loader) 应用动画spin，动画持续2秒，缓慢进，缓慢出（ease-in-out），无限循环。
+4. 进度条(.progress-bar)宽度为200px，高度为10px，背景颜色#e0e0e0，圆角5px 。
+5. 进度(.progress) 高度100%，背景颜色#4caf50 。
+6. 定义填充动画（.fill）0%时宽度为0px，60%时宽度为90%，100%时宽度为100% 。
+7. 进度(.progress) 应用动画fill，持续5秒，结束时保持状态。
+*/

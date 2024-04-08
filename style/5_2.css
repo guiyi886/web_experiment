@@ -1,0 +1,58 @@
+.planet {
+  border-radius: 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: absolute;
+}
+
+.sun {
+  width: 150px;
+  height: 150px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background-image: url("http://172.31.73.236/resource/img/sun.png");
+}
+
+.earth {
+  width: 100px;
+  height: 100px;
+  left: calc(50% - 200px);
+  top: calc(50% - 200px);
+  transform: translate(-50%, -50%);
+  transform-origin: 200px 200px;
+  background-image: url("http://172.31.73.236/resource/img/earth.png");
+  animation: earthRotation 5s linear infinite;
+}
+
+@keyframes earthRotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+body {
+  background-image: url("http://172.31.73.236/resource/img/starry-sky.jpg");
+}
+
+/*
+定义太阳与地球的通用类样式（.planet）
+- 边框圆角50%，背景不重复，背景大小设置为覆盖（cover），绝对定位。
+定义太阳（.sun）样式
+宽高150px，距离左侧顶部各50%。
+应用 transform 属性平移半个元素的宽高（-50%，-50%），使得元素中心点在中心。
+背景图片：http://172.31.73.236/resource/img/sun.png
+定义地球（.earth）样式
+宽高100px，通过calc(50% - 200px)实现距离太阳左侧和顶部各200px。
+设置旋转中心(transform-origin)为太阳的中心点（相对距离，此时太阳在地球的右下200px）。
+背景图片：http://172.31.73.236/resource/img/earth.png
+定义动画 earthRotation：
+地球在0%时旋转度数为0度，50%时旋转度数为180度，100%时完成360度的旋转，实现连续旋转的效果。
+定义body背景图片：http://172.31.73.236/resource/img/starry-sky.jpg
+*/

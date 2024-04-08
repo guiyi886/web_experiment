@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+    }
+  </style>
+  <link rel="stylesheet" href="../style/5_3.css">
+</head>
+<body>
+<div class="card">
+  <img src="http://172.31.73.236/resource/img/earth.png" alt="Card Image"/>
+  <div class="content">
+    <h2>地球</h2>
+    <p>一个生机勃勃的星球，孕育着无数自然奇迹。</p>
+  </div>
+</div>
+<script>
+  // 我们使用Javascript监听鼠标移动来模拟hover，当鼠标移动进入卡片后，增加卡片class "active"，移除则remove
+  var card = document.querySelector(".card");
+  card.addEventListener("mouseenter", function () {
+    card.classList.add("active");
+  });
+  card.addEventListener("mouseleave", function () {
+    card.classList.remove("active");
+  });
+</script>
+</body>
+</html>

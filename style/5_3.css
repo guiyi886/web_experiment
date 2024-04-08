@@ -1,0 +1,51 @@
+.card {
+  width: 400px;
+  height: 200px;
+  background-color: white;
+  border: 1px solid grey;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.5s ease-in;
+  box-shadow: 10px 10px 5px #888888;
+}
+
+.card img {
+  height: 200px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.5s ease-out;
+}
+
+.card .content {
+  position: absolute;
+  bottom: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease-in;
+}
+
+.card.active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.card.active img {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+.card.active .content {
+  opacity: 1;
+}
+
+/*
+卡片(.card) 宽度400px，高度200px，背景色为白色，1px实线灰色边框，相对定位，溢出时内容隐藏。光标为手型。使用transition过渡全部效果，时长0.5s，以ease-in方式先慢后快的方式。阴影效果自设。
+图片(.card img) 高度200px，不设宽度（自适应），绝对定位，设置距离左侧50%，距离顶端50%的偏移，再向左向上平移自身50%的位置。使用transition过渡效果：时长0.5s，以ease-out先快后慢的方式。
+内容(.card .content)绝对定位在底部，不透明度为0，设置不透明度的过渡效果为0.5s、ease-in方式。
+激活状态下的卡片(.card.active) 背景色为rgba(0, 0, 0, 0.1)。
+激活状态下的图片(.card.active img) 使用transform保持自身平移translate效果并且缩放scale 1.2倍。
+激活状态下的内容(.card.active .content) 不透明度置为1。
+
+
+(实验模板将使用js：当鼠标移入卡片后增加卡片class “.active” 移出后去除class)
+*/
