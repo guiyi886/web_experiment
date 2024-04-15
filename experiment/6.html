@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <!-- 设置文档字符集为UTF-8 -->
+  <meta charset="UTF-8"/>
+  <!-- 设置视口宽度等于设备宽度，并且初始缩放级别为1.0 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- 设置页面标题 -->
+  <title>水果商城 - 新鲜水果，健康生活</title>
+  <style>
+    /* 通用样式重置 */
+    * {
+      margin: 0; /*外边距设置为0*/
+      padding: 0; /*内边距设置为0*/
+      box-sizing: border-box; /*盒模型设置为border-box，保持元素宽度包含边框和内边距*/
+    }
+
+    /* 设置根元素的主题颜色变量 */
+    :root {
+      --theme--color: #4CAF50; /*设置主题颜色变量*/
+    }
+
+    /* 设置顶部导航栏样式 */
+    .site-header {
+      position: fixed; /*固定定位，使导航栏固定在页面顶部*/
+      top: 0; /*距离顶部0像素*/
+      width: 100%; /* 顶部导航栏宽度为100% */
+      height: 80px; /*导航栏高度为80像素*/
+      line-height: 80px; /*行高与导航栏高度相同，使内容垂直居中*/
+      background-color: var(--theme--color); /*背景颜色使用主题色变量*/
+      z-index: 1000; /* 设置堆叠顺序，使导航栏显示在页面顶部 */
+    }
+
+    /* 设置商城logo样式 */
+    .logo {
+      color: white; /*字体颜色为白色*/
+      float: left; /*左浮动*/
+      margin-left: 15%; /* 设置左外边距 */
+    }
+
+    /* 设置导航列表样式 */
+    .fruit-nav ul.nav-list {
+      height: 100%; /*高度100%*/
+      list-style: none; /*去除列表项默认样式*/
+      display: flex; /*设置为弹性盒子*/
+      justify-content: flex-end; /* 右对齐 */
+      align-items: center; /*垂直居中*/
+    }
+
+    /* 设置导航项样式 */
+    .nav-item a {
+      color: white; /*字体颜色为白色*/
+      text-decoration: none; /*去除下划线*/
+      padding: 5px 15px; /* 设置内边距 */
+      border-radius: 3px; /*设置圆角*/
+      transition: background-color 0.3s; /* 添加背景颜色过渡效果 */
+    }
+
+    /* 鼠标悬停时导航项的样式 */
+    .nav-item a:hover {
+      background-color: #45a049; /*悬停时背景颜色变化*/
+    }
+
+    /* 设置主体内容容器样式 */
+    .main-container {
+      display: flex; /*设置为弹性盒子*/
+      margin-top: 80px; /*距离顶部距离为80像素*/
+      justify-content: space-between; /*两端对齐*/
+    }
+
+    /* 设置侧边菜单栏样式 */
+    .side-menu {
+      width: 200px; /*侧边菜单栏宽度为200像素*/
+      height: calc(100vh - 80px); /*高度为视口高度减去顶部导航栏高度*/
+      padding: 10px; /*内边距为10像素*/
+      background-color: #f2f2f2; /*背景颜色*/
+      position: sticky; /*设置为粘性定位*/
+      top: 80px; /*距离顶部80像素*/
+    }
+
+    /* 设置主体内容区样式 */
+    .main-content {
+      flex: 1; /*弹性元素，占据剩余空间*/
+    }
+
+    /* 媒体查询，当屏幕宽度小于768px时应用以下样式 */
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column; /*垂直方向排列*/
+      }
+
+      .side-menu {
+        width: 100%; /*宽度100%*/
+        height: auto; /*高度自动*/
+        margin-bottom: 20px; /*底部外边距为20像素*/
+      }
+
+      .main-content {
+        width: 100%; /*宽度100%*/
+      }
+    }
+
+    /* 设置底部栏样式 */
+    .site-footer {
+      background-color: var(--theme--color); /*背景颜色使用主题色变量*/
+      color: white; /*字体颜色为白色*/
+      text-align: center; /*文本居中*/
+      padding: 20px 0; /*上下内边距为20像素，左右内边距为0*/
+    }
+
+    /* 设置侧边菜单列表项样式 */
+    .side-menu-list a {
+      text-align: left; /*文本左对齐*/
+      color: #333; /*字体颜色*/
+      text-decoration: none; /*去除下划线*/
+      line-height: 50px; /*行高50像素*/
+    }
+
+    /* 鼠标悬停时侧边菜单列表项的样式 */
+    .side-menu-item:hover {
+      background-color: #c6bbbb; /*悬停时背景颜色变化*/
+    }
+
+    /* 设置水果项容器样式 */
+    .fruit-items {
+      display: flex; /*设置为弹性盒子*/
+      gap: 5px; /*项目之间的间隔为5像素*/
+      flex-wrap: wrap; /*自动换行*/
+      justify-content: space-between; /*两端对齐*/
+    }
+
+    /* 设置水果项样式 */
+    .fruit-item {
+      min-width: 200px; /*最小宽度为200像素*/
+      border: 1px solid #ccc; /*边框为1像素实线，颜色为灰色*/
+      border-radius: 5px; /*设置圆角*/
+      transition: all 0.3s ease; /* 添加过渡效果 */
+      padding: 30px; /*内边距为30像素*/
+      line-height: 50px; /*行高为50像素*/
+      text-align: center; /*文本居中*/
+    }
+
+    /* 鼠标悬停时水果项的样式 */
+    .fruit-item:hover {
+      transform: translateY(-5px); /*向上移动5像素*/
+      box-shadow: 0 4px 8px 8px rgba(0, 0, 0, 0.2); /*添加阴影效果*/
+    }
+
+    /* 媒体查询，当屏幕宽度大于等于768px时应用以下样式 */
+    @media (min-width: 768px) {
+      .fruit-item {
+        max-width: 30%; /*最大宽度为父元素的30%*/
+      }
+    }
+
+    /* 设置水果图片样式 */
+    .fruit-item .fruit-img {
+      width: 100%; /*宽度100%*/
+      height: auto; /*高度自动*/
+      border-radius: 5px; /*设置圆角*/
+    }
+
+    /* 设置水果名称样式 */
+    .fruit-name {
+      font-size: 18px; /*字体大小为18像素*/
+      color: #333; /*字体颜色*/
+    }
+
+    /* 设置水果描述样式 */
+    .fruit-description {
+      color: #666; /*字体颜色*/
+    }
+
+    /* 设置水果价格样式 */
+    .fruit-price {
+      font-weight: bold; /*字体加粗*/
+      color: #E91E63; /*字体颜色*/
+      margin-bottom: 0; /*底部外边距为0*/
+    }
+
+    /* 设置购买按钮样式 */
+    .fruit-buy-btn {
+      display: block; /*块级元素*/
+      width: 100%; /*宽度100%*/
+      padding: 10px; /*内边距为10像素*/
+      background-color: var(--theme--color); /*背景颜色使用主题色变量*/
+      color: white; /*字体颜色为白色*/
+      font-weight: bold; /*字体加粗*/
+    }
+
+    /* 鼠标悬停时购买按钮的样式 */
+    .fruit-buy-btn:hover {
+      background-color: #45A049; /*悬停时背景颜色变化*/
+      cursor: pointer; /*鼠标悬停时显示手型*/
+    }
+
+    /* 设置工具栏样式 */
+    .toolkit {
+      position: fixed; /*固定定位*/
+      right: 0; /*距离右侧0像素*/
+      bottom: 50%; /*距离底部50%*/
+      transform: translateY(50%); /*垂直方向上移动50%*/
+      background-color: white; /*背景颜色为白色*/
+      z-index: 100; /* 设置堆叠顺序 */
+      border-radius: 8px 0 0 8px; /*设置圆角*/
+      text-align: center; /*文本居中*/
+    }
+
+    /* 设置工具栏列表样式 */
+    .toolkit-list {
+      padding: 12px 8px; /*上下内边距为12像素，左右内边距为8像素*/
+      display: flex; /*设置为弹性盒子*/
+      flex-direction: column; /*垂直方向排列*/
+      justify-content: center; /*垂直居中*/
+      align-items: center; /*水平居中*/
+      font-size: 0.8rem; /*字体大小为0.8rem*/
+    }
+
+    /* 设置工具栏列表项样式 */
+    .toolkit-item a {
+      display: block; /*块级元素*/
+      text-decoration: none; /*去除下划线*/
+    }
+
+    /* 设置工具栏图标样式 */
+    .toolkit-item img {
+      width: 40px; /*宽度为40像素*/
+      margin-bottom: 0; /*底部外边距为0*/
+    }
+
+    /* 鼠标悬停时工具栏列表项的样式 */
+    .toolkit-item a:hover {
+      box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3); /*添加阴影效果*/
+      background-color: #faf6f6; /*悬停时背景颜色变化*/
+    }
+  </style>
+</head>
+<body>
+<!-- 顶部导航栏 -->
+<header class="site-header">
+  <div class="container">
+    <h1 class="logo">水果商城</h1>
+    <nav class="fruit-nav">
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#">首页</a></li>
+        <li class="nav-item"><a href="#">新鲜水果</a></li>
+        <li class="nav-item"><a href="#">有机水果</a></li>
+        <li class="nav-item"><a href="#">热带水果</a></li>
+        <li class="nav-item"><a href="#">优惠活动</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="main-container">
+
+  <!-- 侧边菜单栏 side-menu -->
+  <aside class="side-menu">
+    <ul class="side-menu-list">
+      <li class="side-menu-item"><a href="#">苹果</a></li>
+      <li class="side-menu-item"><a href="#">橙子</a></li>
+      <li class="side-menu-item"><a href="#">香蕉</a></li>
+      <li class="side-menu-item"><a href="#">草莓</a></li>
+      <li class="side-menu-item"><a href="#">芒果</a></li>
+    </ul>
+  </aside>
+
+  <!-- 主体内容区 main-content -->
+  <main class="main-content">
+    <div class="fruit-items">
+      <div class="fruit-item">
+        <img class="fruit-img" src="http://172.31.73.236/resource/img/apple.jpg"/>
+        <div class="fruit-info">
+          <h3 class="fruit-name">苹果</h3>
+          <p class="fruit-description">甜的</p>
+          <p class="fruit-price">￥99.99</p>
+        </div>
+        <button class="fruit-buy-btn">购买</button>
+      </div>
+
+      <div class="fruit-item">
+        <img class="fruit-img" src="http://172.31.73.236/resource/img/apple.jpg"/>
+        <div class="fruit-info">
+          <h3 class="fruit-name">苹果</h3>
+          <p class="fruit-description">甜的</p>
+          <p class="fruit-price">￥99.99</p>
+        </div>
+        <button class="fruit-buy-btn">购买</button>
+      </div>
+
+      <div class="fruit-item">
+        <img class="fruit-img" src="http://172.31.73.236/resource/img/apple.jpg"/>
+        <div class="fruit-info">
+          <h3 class="fruit-name">苹果</h3>
+          <p class="fruit-description">甜的</p>
+          <p class="fruit-price">￥99.99</p>
+        </div>
+        <button class="fruit-buy-btn">购买</button>
+      </div>
+
+      <div class="fruit-item">
+        <img class="fruit-img" src="http://172.31.73.236/resource/img/apple.jpg"/>
+        <div class="fruit-info">
+          <h3 class="fruit-name">苹果</h3>
+          <p class="fruit-description">甜的</p>
+          <p class="fruit-price">￥99.99</p>
+        </div>
+        <button class="fruit-buy-btn">购买</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 右侧工具栏 -->
+  <div class="toolkit">
+    <div class="toolkit-list">
+      <div class="toolkit-item">
+        <a href="#">
+          <img
+            src="http://172.31.73.236/resource/img/toolkit-chat.png"
+            class="toolkit-icon"
+          />
+          <div class="toolkit-bottom">联系客服</div>
+        </a>
+
+        <a href="#">
+          <img
+            src="http://172.31.73.236/resource/img/toolkit-cart.png"
+            class="toolkit-icon"
+          />
+          <div class="toolkit-bottom">购物车</div>
+        </a>
+
+        <a href="#">
+          <img
+            src="http://172.31.73.236/resource/img/toolkit-write.png"
+            class="toolkit-icon"
+          />
+          <div class="toolkit-bottom">反馈</div>
+        </a>
+
+        <a href="#">
+          <img
+            src="http://172.31.73.236/resource/img/toolkit-back.png"
+            class="toolkit-icon"
+          />
+          <div class="toolkit-bottom">回顶部</div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 底部栏 -->
+<footer class="site-footer">&copy;2024 水果商城保留所有权利</footer>
+
+<script>
+  // 页面宽度过小时，以“菜单”替换所有的列表项
+  // 页面宽度较大时，使用多项列表项
+  const resizeWidth = 620; // 设置页面宽度阈值
+  // 绑定一个事件监听器到window对象的resize事件上
+  window.addEventListener("resize", function () {
+    var navItems = ["首页", "新鲜水果", "有机水果", "热带水果", "优惠活动"]; // 导航项数组
+    // 如果窗口的宽度小于620像素，则将navItems数组中的所有元素替换为"菜单"
+    if (window.innerWidth < resizeWidth) {
+      navItems = ["菜单"];
+    }
+    const navList = document.querySelector(".nav-list");
+    if (navList) {
+      // 清除.nav-list内的所有子元素
+      while (navList.firstChild) {
+        navList.removeChild(navList.firstChild);
+      }
+
+      // 循环遍历导航项数组，动态生成导航列表项
+      navItems.forEach((item) => {
+        const navItem = document.createElement("li");
+        navItem.className = "nav-item";
+        navItem.innerHTML = `<a href="#">${item}</a>`;
+        navList.appendChild(navItem);
+      });
+    }
+  });
+</script>
+</body>
+</html>
