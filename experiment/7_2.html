@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    input,
+    button {
+      font-size: 16px;
+      padding: 8px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+<input type="text" id="palindromeInput" placeholder="Enter a string"/>
+<button id="checkButton">检测是否回文</button>
+
+<script>
+  function checkPalindrome() {
+    // code here
+    const str1 = document.getElementById("palindromeInput").value;
+    const str2 = str1.trim();
+    const str3 = str2.split("").reverse().join("");
+    if (str3 === str2) {
+      alert("是");
+    } else {
+      alert("否");
+    }
+  }
+
+  document.getElementById("checkButton").addEventListener("click", checkPalindrome);
+</script>
+</body>
+</html>
+
+<!--
+实现效果：用户在文本框输入字符串，点击按钮，判断是否是回文字符串，通过alert输出判定结果。
+字符串的判定需提前做额外处理：去除字符串两端的空格。
+使用addEventListener监听按钮的click事件。
+Alert内容：
+回文输出“是”；
+否则输出“否”。
+测试示例：
+是：“12321”，“123321”，“奶牛牌牛奶  ”
+否：“123123”，“abcCBA”，“你好不好”
+-->

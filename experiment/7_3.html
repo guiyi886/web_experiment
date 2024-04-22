@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>手机号码合法性检查</title>
+  <style>
+    .valid {
+      color: green;
+    }
+
+    .invalid {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+<input
+  type="text"
+  id="phone-number"
+  placeholder="输入手机号码"
+  oninput="checkPhoneNumber()"
+/>
+<span id="result"></span>
+
+<script>
+  function checkPhoneNumber() {
+    // code here
+    const str = document.getElementById('phone-number').value;
+    let flag = false;
+    if (str.length === 11 && str[0] === '1' && "3456789".includes(str[1])) {
+      flag = true;
+      for (let i = 2; i < str.length; i++) {
+        if (!"0123456789".includes(str[i])) {
+          flag = false;
+        }
+      }
+    }
+    let span = document.getElementById('result');
+    if (flag === true) {
+      span.innerText = "合法";
+      span.className = "valid";
+    } else {
+      span.innerText = "不合法";
+      span.className = "invalid";
+    }
+  }
+
+  // 提示：系统执行JS代码时非全局作用域，如果在HTML代码内使用onclick等声明回调函数，则需要挂载对应的事件处理函数到window对象上，与实验无关。
+  // 将checkPhoneNumber 函数挂载到 window 对象上，使其成为全局函数。
+  window.checkPhoneNumber = checkPhoneNumber;
+</script>
+</body>
+</html>
+
+<!--
+实现效果：实时判断用户输入的一个11位数的电话号码是否合法。在输入框右侧给出提示。
+规则：
+手机号码由11位数字组成。
+以1开头，这是中国的移动通信运营商规定的手机号码的起始数字。
+第二位数字通常是3、4、5、6、7、8、9中的一个，这取决于不同的运营商和服务类型。
+剩下的九位数字可以是任何数字，从0到9。
+合法：输出绿色的span标签“合法”；不合法：输出红色的span标签“不合法”。(应用模板的class，不要再内嵌元素)
+-->
