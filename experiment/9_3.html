@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>页签切换</title>
+  <meta charset="UTF-8">
+  <style>
+    /* CSS样式 */
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    main {
+      flex: 1;
+    }
+
+    .sidebar {
+      width: 200px;
+      height: 100vh;
+      background-color: #f0f0f0;
+      overflow-y: auto;
+
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .tab {
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .tab p {
+      font-size: 18px;
+    }
+
+    .tab:nth-child(1) {
+      background-color: #e0e0e0;
+    }
+
+    .tab:nth-child(2) {
+      background-color: #d0d0d0;
+    }
+
+    .tab:nth-child(3) {
+      background-color: #c0c0c0;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- 侧边栏 -->
+  <div class="sidebar">
+    <button id="tab1-button">已提交列表</button>
+    <button id="tab2-button">参考图片链接</button>
+    <button id="tab3-button">实验提交</button>
+  </div>
+  <!-- 主内容区 -->
+  <main>
+    <!-- 页签1 -->
+    <div class="tab" id="tab1-content">
+      <h3>注意事项</h3>
+      <p>实验检查项在实验提交中查看。</p>
+      <p>注意看左侧的实验检查项要求！</p>
+      <p>校验次数达8次后展示具体错误，8次前仅展示错误类型。</p>
+    </div>
+    <!-- 页签2 -->
+    <div class="tab" id="tab2-content">
+      <h3>各实验题目参考图片链接</h3>
+      <img src="http://172.31.73.236/resource/img/exp1_1.jpg" class="item-img">
+    </div>
+    <!-- 页签3 -->
+    <div class="tab" id="tab3-content">
+      <h3>实验提交</h3>
+      <textarea name="提交答案" cols="30" rows="10">xxx</textarea>
+    </div>
+  </main>
+</div>
+<script>
+  // JavaScript代码
+  const menuButtons = document.querySelectorAll("button");
+  const tabs = document.querySelectorAll(".tab");
+
+  // 初始状态下激活第一个按钮
+  menuButtons[0].style.color = "#409eff";
+
+  // 给每个按钮添加点击事件
+  menuButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      // 隐藏所有标签页
+      tabs.forEach(tab => tab.style.display = "none");
+      // 显示对应索引的标签页
+      tabs[index].style.display = "block";
+
+      // 清除所有按钮的颜色
+      menuButtons.forEach(btn => btn.style.color = "");
+      // 设置点击的按钮颜色为蓝色
+      button.style.color = "#409eff";
+    })
+  })
+</script>
+</body>
+</html>

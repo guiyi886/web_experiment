@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>登录问候</title>
+  <link rel="stylesheet" href="http://172.31.73.236/resource/css/9-2.css">
+  <script src="http://172.31.73.236/resource/js/9-2.js"></script>
+</head>
+<body>
+<div id="header">
+  <div id="title">我的网站</div>
+  <div id="user-info">
+
+    <!-- 问候语 -->
+    <span id="greeting"></span>
+
+    <button>退出登录</button>
+  </div>
+</div>
+
+<script>
+  // 获取问候语的元素
+  var greetingElement = document.getElementById("greeting");
+
+  // 每隔1秒更新问候语
+  setInterval(function () {
+    // 获取用户信息
+    var userInfo = getUserInfo(currentTime);
+
+    // 获取当前时间
+    var currentTime = getCurrentTime();
+
+    // 获取小时
+    var currentHour = currentTime.getHours();
+
+    var greeting;
+
+    // 根据用户类型添加不同的问候语
+    if (userInfo.type === "teacher") {
+      greeting = userInfo.username + "老师，";
+    } else {
+      greeting = userInfo.username + "同学，";
+    }
+
+    // 根据当前时间确定问候语
+    if (currentHour >= 5 && currentHour < 11) {
+      greeting += "上午好";
+    } else if (currentHour >= 11 && currentHour < 13) {
+      greeting += "中午好";
+    } else if (currentHour >= 13 && currentHour < 18) {
+      greeting += "下午好";
+    } else {
+      greeting += "晚上好";
+    }
+
+
+    // 更新问候语的内容
+    greetingElement.textContent = greeting;
+  }, 1000); // 每隔1秒执行一次
+
+</script>
+</body>
+</html>

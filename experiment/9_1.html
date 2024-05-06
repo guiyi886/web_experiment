@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <title>用户注册</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="http://172.31.73.236/resource/css/9-1.css"/>
+
+  <!-- 引用两种加密库（仍选其一进行加密即可） -->
+  <script src="http://172.31.73.236/assets/crypto-js.min.js"></script>
+  <script src="http://172.31.73.236/assets/sm3.js"></script>
+  <!-- 引用弹窗库SweetAlert -->
+  <script src="http://172.31.73.236/assets/sweetalert2@10.js"></script>
+
+  <!-- 引用mockPost函数,可跳转链接查看其中内容，辅助理解 -->
+  <script src="http://172.31.73.236/resource/js/mock-post.js"></script>
+</head>
+<body>
+<div class="container">
+  <fieldset>
+    <legend>
+      <h2>用户注册</h2>
+    </legend>
+    <div class="form-group">
+      <label for="stuid">学 号</label>
+      <div class="input-area">
+        <input type="text" id="stuid" class="form-control"/>
+        <!-- 提示信息 -->
+        <span class="result" id="stuid-error"></span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="password">密 码</label>
+      <div class="input-area">
+        <input type="password" id="password" class="form-control"/>
+        <!-- 提示信息 -->
+        <span class="result" id="password-error"></span>
+      </div>
+    </div>
+    <div class="button-box">
+      <button id="submit" class="btn">提交</button>
+      <button id="reset" class="btn">重置</button>
+    </div>
+  </fieldset>
+</div>
+
+<script>
+  // 使用SHA-256加密
+  function sha256Encrypt(password) {
+    return CryptoJS.SHA256(password).toString();
+  }
+
+  // 获取输入框和按钮
+  var stuidInput = document.getElementById("stuid");
+  var passwordInput = document.getElementById("password");
+  var submitButton = document.getElementById("submit");
+
+  // 添加事件监听器，实时验证输入
+  stuidInput.addEventListener("input", validateStuid);
+  stuidInput.addEventListener("blur", validateStuid);
+  passwordInput.addEventListener("input", validatePassword);
+  passwordInput.addEventListener("blur", validatePassword);
+
+  var flag1, flag2;
+
+  // 判断表单合法性
+  function validateStuid() {
+    var stuidError = document.getElementById("stuid-error");
+    var stuidValue = stuidInput.value.trim(); // 获取输入框的值，并去除首尾空格
+
+    stuidError.innerText = ""; // 先清空错误提示
+    submitButton.disabled = true; // 先禁用提交按钮
+    submitButton.classList.add("disabled");
+    flag1 = true;
+
+    if (stuidValue.trim() === "") {
+      stuidError.innerText = "学号不能为空";
+      flag1 = false;
+      return false;
+    }
+
+    if (stuidValue.length !== 10) {
+      flag1 = false;
+      if (stuidError.innerText !== "")
+        stuidError.innerText += "，";
+      stuidError.innerText += "学号长度应为10位数字";
+    }
+
+    if (!/^[0-9]*$/.test(stuidValue)) {
+      flag1 = false;
+      if (stuidError.innerText !== "")
+        stuidError.innerText += "，";
+      stuidError.innerText += "学号仅能包含数字";
+    }
+
+    if (flag1 && flag2) {
+      // 在恢复时将 disabled 属性设置为 false
+      submitButton.disabled = false;
+
+      // 移除 disabled 类名
+      submitButton.classList.remove("disabled");
+    }
+    return true;
+  }
+
+  // 判断表单合法性
+  function validatePassword() {
+    var passwordError = document.getElementById("password-error");
+    var passwordValue = passwordInput.value.trim(); // 获取输入框的值，并去除首尾空格
+
+    passwordError.innerText = ""; // 先清空错误提示
+    submitButton.disabled = true; // 先禁用提交按钮
+    submitButton.classList.add("disabled");
+    flag2 = true;
+
+    if (passwordValue.trim() === "") {
+      flag2 = false;
+      passwordError.innerText = "密码不能为空";
+      return false;
+    }
+    var num = 0;
+    if (/(?=.*\d)/.test(passwordValue))
+      num++;
+    if (/(?=.*[a-z])/.test(passwordValue) || /(?=.*[A-Z])/.test(passwordValue))
+      num++;
+    if (/(?=.*[!@#$%^&*.])/.test(passwordValue))
+      num++;
+
+    //用^和$包起来才是整个字符串完全匹配
+    if (!/^[a-zA-Z\d!@#$%^&*.]{8,20}$/.test(passwordValue) && num < 2) {
+      flag2 = false;
+      passwordError.innerText = "密码长度应为8-20个字符，且密码需同时包含字母、数字或特殊字符两种及以上";
+      return false;
+    }
+
+    if (!/^[a-zA-Z\d!@#$%^&*.]{8,20}$/.test(passwordValue)) {
+      flag2 = false;
+      passwordError.innerText += "密码长度应为8-20个字符";
+    }
+
+    // 检查密码是否包含字母、数字或特殊字符中的两种及以上
+    if (num < 2) {
+      flag2 = false;
+      if (passwordError.innerText !== "")
+        passwordError.innerText += "，";
+      passwordError.innerText += "密码需同时包含字母、数字或特殊字符两种及以上";
+    }
+
+    if (flag1 && flag2) {
+      // 在恢复时将 disabled 属性设置为 false
+      submitButton.disabled = false;
+
+      // 移除 disabled 类名
+      submitButton.classList.remove("disabled");
+    }
+    return true;
+  }
+
+  // 添加点击事件监听器
+  document.getElementById("submit").addEventListener("click", handleSubmit);
+  document.getElementById("reset").addEventListener("click", handleReset);
+
+  //提交表单
+  function handleSubmit() {
+    var stuid = document.getElementById("stuid").value;
+    var password = document.getElementById("password").value;
+    var encryptedPassword = sha256Encrypt(password);
+
+    mockPost({stuid: stuid, password: encryptedPassword}).then(receiveSuccess).catch(receiveError);
+  }
+
+  // 重置表单
+  function handleReset() {
+    var resetConfirmed = confirm("确认重置表单吗？");
+    if (resetConfirmed) {
+      // 清空学号和密码输入框内容
+      document.getElementById("stuid").value = "";
+      document.getElementById("password").value = "";
+    }
+  }
+</script>
+</body>
+</html>
