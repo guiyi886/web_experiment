@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>渐变雨滴效果</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #000;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script>
+  // 获取canvas元素并设置宽高为浏览器窗口大小
+  const canvas = document.getElementById("canvas");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // 获取canvas的2d上下文对象
+  const ctx = canvas.getContext("2d");
+
+  // 创建线性渐变背景色
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, 'rgba(0, 255, 255, 0.5)');
+  gradient.addColorStop(1, 'rgba(0, 255, 255, 0.1)');
+  ctx.fillStyle = gradient;
+
+  // 定义雨滴数量和存储雨滴的数组
+  const numDrops = 100;
+  const drops = [];
+
+  // 创建雨滴对象
+  for (let i = 0; i < numDrops; i++) {
+    drops[i] = {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      width: Math.random() * 3 + 1,
+      length: Math.random() * 10,
+      ySpeed: Math.random() * 5 + 1,
+    };
+  }
+
+  // 绘制雨滴的函数
+  function drawRain() {
+    // 清空整个canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 绘制每个雨滴
+    for (let i = 0; i < numDrops; i++) {
+      ctx.fillRect(drops[i].x, drops[i].y, drops[i].width, drops[i].length);
+      drops[i].y += drops[i].ySpeed;
+      // 如果雨滴超出canvas高度，重新设置位置到顶部
+      if (drops[i].y > canvas.height) {
+        drops[i].y = 0 - drops[i].length;
+      }
+    }
+
+    // 请求下一帧动画
+    requestAnimationFrame(drawRain);
+  }
+
+  // 调用绘制雨滴函数开始动画
+  drawRain();
+</script>
+</body>
+</html>

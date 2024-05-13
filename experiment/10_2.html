@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>翻转迷宫</title>
+  <link rel="stylesheet" href="http://172.31.73.236/resource/css/10-2.css"/>
+</head>
+<body>
+<h1>翻转迷宫</h1>
+<div class="game-box">
+  <div id="bestRecord">
+    最佳通关时间：<span id="bestTime">x.xxx</span>秒
+  </div>
+  <div id="currentTime">当前时间：<span id="costTime">x.xxx</span>秒</div>
+  <button id="startButton">开始游戏</button>
+</div>
+
+<!-- Canvas元素 -->
+<canvas id="gameCanvas"></canvas>
+
+<script>
+  class MazeGameManager {
+    constructor() {
+      this.canvas = document.getElementById("gameCanvas");
+      this.ctx = this.canvas.getContext("2d");
+      this.bestTimeElement = document.getElementById("bestTime");
+      this.costTimeElement = document.getElementById("costTime");
+      this.status = "loading"; // 状态：loading, ready, running , over
+
+      // 开始按钮
+      this.startButton = document.getElementById("startButton");
+      this.startButton.setAttribute("disabled", "true"); // 不允许开始，直到图像资源加载完毕
+      this.startButton.addEventListener("click", () => {
+        this.startGame();
+      });
+      // 设置键盘监听
+      document.addEventListener("keydown", (event) => {
+        this.movePlayer(event);
+      });
+
+      // 计算通关时间 及 最佳时间
+      this.startTime = null;
+      this.endTime = null;
+      this.timeDiff = null;
+      this.bestTime = null;
+
+      // 是否启动随机模式
+      this.randomMode = false;
+      this.randomModeTimer = null;
+
+      // 定义地图数据(初始数据，便于重置)
+      this.initMap = [
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1],
+        [1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+        [1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0],
+        [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+        [1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1],
+      ];
+      this.map = [
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1],
+        [1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+        [1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0],
+        [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+        [1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1],
+      ];
+
+      // 定义人物初始位置
+      this.playerPosition = {
+        x: 0,
+        y: 0,
+      };
+
+      // 定义图像尺寸变量
+      this.imageWidth = 50;
+      this.imageHeight = 50;
+
+      // TODO-1 canvas初始化：设置canvas的宽高为图块尺寸宽高*对应的数量
+      this.canvas.width = this.imageWidth * this.map[0].length;
+      this.canvas.height = this.imageHeight * this.map.length;
+
+      // 四种图块资源
+      this.road = new Image();
+      this.wall = new Image();
+      this.person = new Image();
+      this.door = new Image();
+
+      // 加载最佳通关时间
+      this.renderBestTime();
+    }
+
+    // 加载图片资源
+    loadAllImages() {
+      this.road.src = "http://172.31.73.236/resource/img/exp10/road.png";
+      this.wall.src = "http://172.31.73.236/resource/img/exp10/wall.png";
+      this.person.src =
+        "http://172.31.73.236/resource/img/exp10/person.png";
+      this.door.src = "http://172.31.73.236/resource/img/exp10/door.png";
+      let gameObject = this;
+      console.log(gameObject);
+
+      // 等待图片加载完成
+      var imageLoaded = 0;
+
+      function imageLoadedCallback() {
+        imageLoaded++;
+        console.log("imageLoaded: " + imageLoaded + ", total: 4");
+        if (imageLoaded === 4) {
+          gameObject.status = "ready"; // 允许开始游戏
+          gameObject.updateGame(); // 更新一次游戏
+        }
+      }
+
+      this.road.onload = imageLoadedCallback;
+      this.wall.onload = imageLoadedCallback;
+      this.person.onload = imageLoadedCallback;
+      this.door.onload = imageLoadedCallback;
+    }
+
+    // TODO-2 渲染最佳时间：获取localStorage 最佳通关秒数，渲染到#bestTime并调用startRandomInterval()方法启动随机模式。（若无则显示“x.xxx”即可）
+    renderBestTime() {
+      let bestTime = localStorage.getItem("bestTime");
+      if (bestTime) {
+        this.bestTimeElement.textContent = bestTime;
+        this.startRandomInterval();
+      } else {
+        this.bestTimeElement.textContent = "x.xxx";
+      }
+    }
+
+    // TODO-3 渲染地图：遍历map，根据不同的数值（0 1 2）调用ctx.drawImage渲染不同的地图块（需计算块的左上角坐标x，y）
+    renderMap() {
+      let map = this.map;
+      for (let i = 0; i < map.length; i++) {
+        for (let j = 0; j < map[0].length; j++) {
+          let x = j * this.imageWidth;
+          let y = i * this.imageHeight;
+          if (map[i][j] === 0) {
+            this.ctx.drawImage(this.road, x, y, this.imageWidth, this.imageHeight);
+          } else if (map[i][j] === 1) {
+            this.ctx.drawImage(this.wall, x, y, this.imageWidth, this.imageHeight);
+          } else if (map[i][j] === 2) {
+            this.ctx.drawImage(this.door, x, y, this.imageWidth, this.imageHeight);
+          }
+        }
+      }
+    }
+
+    // TODO-4 渲染人物:直接调用this.ctx.drawImage 根据角色坐标进行绘制。
+    renderPlayer() {
+      let playerPosition = this.playerPosition;
+      let x = playerPosition.x * this.imageWidth;
+      let y = playerPosition.y * this.imageHeight;
+      this.ctx.drawImage(this.person, x, y, this.imageWidth, this.imageHeight);
+    }
+
+    // TODO-5 判断胜利: 判定角色所处的位置是否为门，若是，return true，否则return false
+    judgeWin() {
+      let map = this.map;
+      let playerPosition = this.playerPosition;
+      return map[playerPosition.y][playerPosition.x] === 2;
+    }
+
+    updateGame() {
+      // 渲染地图
+      this.renderMap();
+      // 渲染人物
+      this.renderPlayer();
+
+      if (this.status === "ready") {
+        // TODO-6 ready逻辑：移除开始按钮的disabled属性
+        this.startButton.removeAttribute("disabled");
+      } else if (this.status === "running") {
+        // TODO-7 running逻辑-胜利：判定是否胜利。胜利则更新游戏状态为“over”; 记录最佳通关时间 ; 开启随机模式; alert显示“恭喜！您成功到达门口！” ;
+        if (this.judgeWin()) {
+          this.status = "over";
+          this.endTime = Date.now();
+          this.timeDiff = (this.endTime - this.startTime) / 1000;
+          this.costTimeElement.textContent = this.timeDiff.toFixed(3);
+          let bestTime = parseFloat(localStorage.getItem("bestTime"));
+          if (!bestTime || this.timeDiff < bestTime) {
+            localStorage.setItem("bestTime", this.timeDiff.toFixed(3));
+            this.bestTimeElement.textContent = this.timeDiff.toFixed(3);
+          }
+          this.startRandomInterval();
+          alert("恭喜！您成功到达门口！");
+        } else {
+          // TODO-8 running逻辑-没胜利：更新当前时间（时间差），实时渲染到costTimeElement
+          let currentTime = (Date.now() - this.startTime) / 1000;
+          this.costTimeElement.textContent = currentTime.toFixed(3);
+          // 调用requestAnimationFrame 继续更新游戏
+          requestAnimationFrame(() => {
+            this.updateGame();
+          });
+        }
+      }
+    }
+
+    // TODO-9 人物移动逻辑：仅在running状态下计算更新人物坐标playerPosition
+    movePlayer(event) {
+      let keyCode = event.keyCode;
+      let playerPosition = this.playerPosition;
+      let map = this.map;
+
+      if (this.status !== "running") {
+        return;
+      }
+
+      // 计算新位置
+      let newPosition = {x: playerPosition.x, y: playerPosition.y};
+      if (keyCode === 37) {
+        newPosition.x -= 1; // Left arrow key
+      } else if (keyCode === 38) {
+        newPosition.y -= 1; // Up arrow key
+      } else if (keyCode === 39) {
+        newPosition.x += 1; // Right arrow key
+      } else if (keyCode === 40) {
+        newPosition.y += 1; // Down arrow key
+      }
+
+      // 检查新位置是否越界或是墙壁
+      if (
+        newPosition.x >= 0 &&
+        newPosition.x < map[0].length &&
+        newPosition.y >= 0 &&
+        newPosition.y < map.length &&
+        map[newPosition.y][newPosition.x] !== 1
+      ) {
+        this.playerPosition = newPosition;
+      }
+    }
+
+    // TODO-10 开始游戏函数
+    startGame() {
+      // TODO-10.1. 检查游戏状态：若loading，alert提示“请等待所有图片加载完成！” 并且禁止开始游戏。
+      if (this.status === "loading") {
+        alert("请等待所有图片加载完成！");
+        return;
+      }
+
+      // 其余情况下
+      // TODO-10.2. 数据重置：playerPosition、 深拷贝initMap到map
+      this.playerPosition = {x: 0, y: 0};
+      this.map = JSON.parse(JSON.stringify(this.initMap));
+
+      // 3. 游戏状态更新为“running”;设置startTime为当前时间(Date.now);调用updateGame开始更新游戏。
+      this.status = "running";
+      this.startTime = Date.now();
+      this.updateGame();
+    }
+
+    // 启动随机模式
+    startRandomInterval() {
+      this.randomMode = true;
+      // 若存在定时器，先清除
+      if (this.randomModeTimer) {
+        clearInterval(this.randomModeTimer);
+      }
+      // 每秒执行一次的定时器
+      this.randomModeTimer = setInterval(() => {
+        let map = this.map;
+
+        // 下面逻辑可自定义，但是不要改间隔时间。
+
+        // 获取随机行和列
+        let randomRow = Math.floor(Math.random() * map.length);
+        let randomCol = Math.floor(Math.random() * map[0].length);
+
+        // 反转该点的值
+        map[randomRow][randomCol] = 1 - map[randomRow][randomCol];
+
+      }, 800);
+    }
+  }
+
+  // 构造迷宫游戏管理器MazeGameManager
+  var mazeGameManager = new MazeGameManager();
+  mazeGameManager.loadAllImages();
+
+  // 校验限定
+  window.mazeGameManager = mazeGameManager;
+
+</script>
+</body>
+</html>
