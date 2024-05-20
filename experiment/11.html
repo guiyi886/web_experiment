@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>随堂题库</title>
+  <link rel="stylesheet" href="http://172.31.73.236/resource/css/11-1.css"/>
+</head>
+<body>
+<h1>随堂题库</h1>
+
+<div class="container">
+  <section class="module">
+    <h2>添加题目</h2>
+    <form id="addForm">
+      <div class="form-item">
+        <label for="content">内容:</label>
+        <input type="text" id="content" name="content"/>
+      </div>
+
+      <div class="form-item">
+        <label for="type">类型:</label>
+        <select id="type" name="type">
+          <option value="单选">单选</option>
+          <option value="多选">多选</option>
+          <option value="判断">判断</option>
+          <option value="填空">填空</option>
+        </select>
+      </div>
+
+      <div class="form-item">
+        <label for="tags">标签:</label>
+        <div class="inline-checkbox">
+          <input type="checkbox" id="html" name="tags" value="HTML" checked/>
+          <label for="html">HTML</label>
+          <input type="checkbox" id="css" name="tags" value="CSS"/>
+          <label for="css">CSS</label>
+          <input type="checkbox" id="js" name="tags" value="JavaScript"/>
+          <label for="js">JavaScript</label>
+        </div>
+      </div>
+
+      <div class="form-item">
+        <label for="answer">答案:</label>
+        <input type="text" id="answer" name="answer" required/>
+      </div>
+
+      <input type="submit" value="添加"/>
+    </form>
+  </section>
+
+  <section class="module">
+    <h2>查询题目</h2>
+    <form id="searchForm">
+      <div class="form-item">
+        <label for="searchContent">内容包含:</label>
+        <input type="text" id="searchContent" name="searchContent"/>
+      </div>
+
+      <div class="form-item">
+        <label for="searchType">类型:</label>
+        <select id="searchType" name="searchType">
+          <option value="">全部</option>
+          <option value="单选">单选</option>
+          <option value="多选">多选</option>
+          <option value="判断">判断</option>
+          <option value="填空">填空</option>
+        </select>
+      </div>
+
+      <div class="form-item">
+        <label for="searchTags">标签限定:</label>
+        <div class="inline-checkbox">
+          <input type="checkbox" id="searchHtml" name="searchTags" value="HTML"/>
+          <label for="searchHtml">HTML</label>
+          <input type="checkbox" id="searchCss" name="searchTags" value="CSS"/>
+          <label for="searchCss">CSS</label>
+          <input type="checkbox" id="searchJs" name="searchTags" value="JavaScript"/>
+          <label for="searchJs">JavaScript</label>
+        </div>
+      </div>
+
+      <input type="submit" value="查询"/>
+    </form>
+  </section>
+
+</div>
+
+<h2>题库列表</h2>
+<table id="questionTable">
+  <thead>
+  <tr>
+    <th>内容</th>
+    <th>类型</th>
+    <th>标签</th>
+    <th>答案</th>
+    <th>操作</th>
+  </tr>
+  </thead>
+  <tbody id="questionList"></tbody>
+</table>
+
+<script>
+  let db;
+
+  // 创建数据库
+  function createDatabase() {
+    // indexedDB.deleteDatabase("webDatabase_2021150047");
+    let request = indexedDB.open("webDatabase_2021150047", 1);
+
+    request.onupgradeneeded = function (event) {
+      db = event.target.result;
+      let objectStore;
+
+      objectStore = db.createObjectStore("questionStore", {keyPath: "id", autoIncrement: true}); // 创建对象存储，并设置自增主键
+      objectStore.createIndex("content", "content", {unique: false}); // 创建索引，内容非唯一
+      objectStore.createIndex("type", "type", {unique: false}); // 创建索引，类型非唯一
+      objectStore.createIndex("tags", "tags", {unique: false, multiEntry: true}); // 创建索引，标签非唯一，多值
+
+    };
+
+    // 成功打开数据库时触发
+    request.onsuccess = function (event) {
+      db = event.target.result; // 获取数据库实例
+      readData(); // 读取数据并显示
+    };
+
+    // 打开数据库失败时触发
+    request.onerror = function (event) {
+      console.error("Database error: " + event.target.errorCode); // 输出错误信息
+    };
+  }
+
+  // 增加数据
+  function addData(event) {
+    event.preventDefault(); // 阻止表单默认提交行为
+
+    // 获取表单中的数据
+    let content = document.getElementById("content").value;
+    let type = document.getElementById("type").value;
+    let tags = Array.from(document.querySelectorAll('input[name="tags"]:checked')).map(tag => tag.value);
+    let answer = document.getElementById("answer").value;
+
+    if (!content || !type || !answer) {
+      return;
+    }
+
+    // 创建一个新的题目对象
+    let newItem = {content, type, tags, answer};
+
+    // 开启事务并获取对象存储
+    let transaction = db.transaction(["questionStore"], "readwrite");
+    let objectStore = transaction.objectStore("questionStore");
+    let request = objectStore.add(newItem); // 向对象存储中添加新数据
+
+    // 数据添加成功时触发
+    request.onsuccess = function () {
+      document.getElementById("addForm").reset(); // 重置表单
+      readData(); // 读取数据并刷新显示
+    };
+
+    // 数据添加失败时触发
+    request.onerror = function (event) {
+      console.error("Add error: " + event.target.errorCode); // 输出错误信息
+    };
+  }
+
+  // 创建读取数据事务，并且调用displayData进行展示
+  function readData() {
+    let transaction = db.transaction(["questionStore"], "readonly"); // 开启只读事务
+    let objectStore = transaction.objectStore("questionStore"); // 获取对象存储
+    let request = objectStore.getAll(); // 获取所有数据
+
+    // 成功获取数据时触发
+    request.onsuccess = function (event) {
+      displayData(event.target.result); // 调用displayData函数展示数据
+    };
+  }
+
+  // 展示数据
+  function displayData(data) {
+    let questionList = document.getElementById("questionList");
+    questionList.innerHTML = ""; // 清空当前列表
+
+    // 遍历数据并创建表格行
+    data.forEach((item) => {
+      let row = document.createElement("tr");
+
+      // 创建内容单元格并添加到行
+      let contentCell = document.createElement("td");
+      contentCell.textContent = item.content;
+      row.appendChild(contentCell);
+
+      // 创建类型单元格并添加到行
+      let typeCell = document.createElement("td");
+      typeCell.textContent = item.type;
+      row.appendChild(typeCell);
+
+      // 创建标签单元格并添加到行
+      let tagsCell = document.createElement("td");
+      tagsCell.textContent = item.tags.join(", ");
+      row.appendChild(tagsCell);
+
+      // 创建答案单元格并添加到行
+      let answerCell = document.createElement("td");
+      answerCell.textContent = item.answer;
+      row.appendChild(answerCell);
+
+      // 创建删除按钮单元格并添加到行
+      let deleteCell = document.createElement("td");
+      let deleteButton = document.createElement("button");
+      deleteButton.textContent = "删除";
+      deleteButton.className = "delete-btn";
+      deleteButton.onclick = function () {
+        deleteData(item.id); // 绑定删除操作
+      };
+      deleteCell.appendChild(deleteButton);
+      row.appendChild(deleteCell);
+
+      questionList.appendChild(row); // 将行添加到列表中
+    });
+  }
+
+  // 弹出确认框，确认后才删除，删除后重新展示数据
+  function deleteData(id) {
+    if (confirm("确定要删除这条记录吗？")) {
+      let transaction = db.transaction(["questionStore"], "readwrite"); // 开启读写事务
+      let objectStore = transaction.objectStore("questionStore"); // 获取对象存储
+      let request = objectStore.delete(id); // 删除指定id的数据
+
+      // 数据删除成功时触发
+      request.onsuccess = function () {
+        readData(); // 重新读取数据并刷新显示
+      };
+    }
+  }
+
+  // 查询逻辑
+  function handleSearch(event) {
+    event.preventDefault();
+
+    let searchContent = document.getElementById("searchContent").value;
+    let searchType = document.getElementById("searchType").value;
+    let searchTags = [];
+    document
+      .querySelectorAll('input[name="searchTags"]:checked')
+      .forEach((tag) => {
+        searchTags.push(tag.value);
+      });
+
+    // 处理查询，若内容为空，则表示无限制。标签为与关系
+    // 开启只读事务并获取对象存储
+    let transaction = db.transaction(["questionStore"], "readonly");
+    let objectStore = transaction.objectStore("questionStore");
+    let request = objectStore.openCursor(); // 打开游标遍历数据
+    let results = [];
+
+    // 成功遍历数据时触发
+    request.onsuccess = function (event) {
+      let cursor = event.target.result;
+
+      if (cursor) {
+        let item = cursor.value;
+        // 检查数据是否符合搜索条件
+        let contentMatch = !searchContent || item.content.includes(searchContent);
+        let typeMatch = !searchType || item.type === searchType;
+        let tagsMatch = searchTags.length === 0 || searchTags.every(tag => item.tags.includes(tag));
+
+        if (contentMatch && typeMatch && tagsMatch) {
+          results.push(item); // 如果符合条件，加入结果集
+        }
+
+        cursor.continue(); // 继续下一个
+      } else {
+        displayData(results); // 游标遍历结束，展示结果
+      }
+    };
+  }
+
+  // 绑定事件处理函数
+  document
+    .getElementById("searchForm")
+    .addEventListener("submit", handleSearch);
+
+  document.getElementById("addForm").addEventListener("submit", addData);
+
+  // 初始化页面时创建数据库，读取数据
+  createDatabase();
+
+  // 校验限定
+  window.db = db;
+</script>
+</body>
+</html>
