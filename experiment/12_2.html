@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- 设置文档的字符编码为UTF-8 -->
+  <meta charset="UTF-8"/>
+  <!-- 设置视口的宽度和初始缩放比例，以适应不同设备 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- 设置页面标题 -->
+  <title>Student Submission List</title>
+  <!-- 引入外部样式表 -->
+  <link rel="stylesheet" href="http://172.31.73.236/resource/css/12-2.css"/>
+  <!-- 引入jQuery库 -->
+  <script src="http://172.31.73.236/assets/jquery-3.6.0.js"></script>
+</head>
+<body>
+<!-- 页面标题 -->
+<h1>已提交列表</h1>
+<!-- 定义一个无序列表，用于存放提交的实验项目 -->
+<ul id="submission-list">
+  <!-- 示例列表项 -->
+  <li class="list-item">
+    <!-- 列表项的头部，包含实验名称和操作按钮 -->
+    <div class="header">
+      <span>实验1.1 求知家园</span>
+      <div class="buttons">
+        <button>查看效果</button>
+        <button>查看代码</button>
+        <span class="remove-item">Remove</span>
+      </div>
+    </div>
+    <!-- 列表项的详细信息，默认隐藏 -->
+    <div class="details">
+      <p>最近提交时间: 2024年05月09日15:47:38</p>
+      <p>校验次数: 6</p>
+      <p>校验情况: 元素错误</p>
+      <p>校验更新时间: 2024年05月09日15:47:39</p>
+      <p>
+        答案点评: 这段代码应用了canvas相关API，设置canvas上下文的'fillStyle'，应用'fillRect'从而模拟雨滴(矩形)持续降落的效果。
+      </p>
+    </div>
+  </li>
+  <li class="list-item">
+    <div class="header">
+      <span>实验1.2 Google搜索</span>
+      <div class="buttons">
+        <button>查看效果</button>
+        <button>查看代码</button>
+        <span class="remove-item">Remove</span>
+      </div>
+    </div>
+    <div class="details">
+      <p>最近提交时间: 2024年05月09日15:47:38</p>
+      <p>校验次数: 3</p>
+      <p>校验情况: 通过</p>
+      <p>校验更新时间: 2024年05月09日15:47:39</p>
+      <p>答案点评: 实现了基本的搜索功能。</p>
+    </div>
+  </li>
+</ul>
+<!-- 添加新实验项目的按钮 -->
+<button id="add-item">Add Experiment</button>
+
+<script>
+  // 使用jQuery事件委托，处理#submission-list内动态添加的.list-item元素的点击事件，切换详细信息的显示与隐藏
+  $('#submission-list').on('click', '.list-item', function () {
+    // 切换当前点击的.list-item下的.details元素的显示状态，使用slideToggle动画效果
+    $(this).children('.details').slideToggle('fast');
+  });
+
+  // 定义一个变量itemCount，初始值为2，用于计数添加的实验项目数量
+  let itemCount = 2;
+  // 为添加按钮绑定点击事件
+  $("#add-item").click(function () {
+    // 增加计数器
+    itemCount++;
+    // 创建新的列表项HTML字符串
+    const newItem = `
+        <li class="list-item">
+          <div class="header">
+            <span>Experiment ${itemCount}: New Experiment</span>
+            <div class="buttons">
+              <button>查看效果</button>
+              <button>查看代码</button>
+              <span class="remove-item">Remove</span>
+            </div>
+          </div>
+          <div class="details">
+            <p>最近提交时间: 2024年05月09日15:47:38</p>
+            <p>校验次数: 0</p>
+            <p>校验情况: Pending</p>
+            <p>校验更新时间: N/A</p>
+            <p>答案点评: 暂无</p>
+          </div>
+        </li>
+      `;
+    // 使用jQuery将新创建的列表项追加到#submission-list中
+    $('#submission-list').append(newItem);
+    // 使用fadeIn效果快速渐入显示新添加的列表项
+    $('#submission-list .list-item:last').fadeIn('fast');
+  });
+
+  // 使用jQuery事件委托，为动态添加的.remove-item元素绑定点击事件
+  $('#submission-list').on('click', '.remove-item', function (event) {
+    // 阻止事件传播，防止触发父元素的点击事件
+    event.stopPropagation();
+    // 获取当前点击的.remove-item元素所在的.list-item元素
+    const listItem = $(this).closest('.list-item');
+    // 使用fadeOut效果淡出当前.list-item元素，然后将其从DOM中移除
+    listItem.fadeOut('fast', function () {
+      listItem.remove();
+    });
+  });
+</script>
+</body>
+</html>

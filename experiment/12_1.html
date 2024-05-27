@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <!-- 定义文档的字符编码为UTF-8，确保中文字符显示正确 -->
+  <meta charset="UTF-8">
+  <!-- 设置视口的宽度和初始缩放比例，以适应不同设备 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 设置页面标题 -->
+  <title>答题系统</title>
+  <!-- 引入jQuery库 -->
+  <script src="http://172.31.73.236/assets/jquery-3.6.0.js"></script>
+  <!-- 引入外部样式表 -->
+  <link rel="stylesheet" href="http://172.31.73.236/resource/css/12-1.css">
+</head>
+<body>
+<!-- 页面标题 -->
+<h1>答题系统</h1>
+<!-- 容纳所有问题的容器 -->
+<div id="questions-container">
+  <!-- 获取数据后，使用JS循环动态渲染 -->
+  <!-- 示例如下：提交需删除 -->
+  <!-- 每一个问题就是一个`.question` -->
+  <div class="question" data-question-id="1">
+    <!-- 问题的题目包裹在h3内 -->
+    <h3>题1: 在CSS中，如何设置一个元素的字体颜色为蓝色？</h3>
+    <!-- 循环渲染选项options，name是 `question-{questionId}` id是`question-{questionId}-option-{option的index}` -->
+    <div>
+      <input type="radio" name="question-1" value="font-color: blue;" id="question-1-option-0"/>
+      <label for="question-1-option-0">font-color: blue;</label>
+    </div>
+    <div>
+      <input type="radio" name="question-1" value="color: blue;" id="question-1-option-1"/>
+      <label for="question-1-option-1">color: blue;</label>
+    </div>
+    <div>
+      <input type="radio" name="question-1" value="text-color: blue;" id="question-1-option-2"/>
+      <label for="question-1-option-2">text-color: blue;</label>
+    </div>
+    <div>
+      <input type="radio" name="question-1" value="font-style: blue;" id="question-1-option-3"/>
+      <label for="question-1-option-3">font-style: blue;</label>
+    </div>
+  </div>
+  <!-- 注意提交的时候删除上面的示例结构 -->
+</div>
+<!-- 提交按钮 -->
+<button id="submit-button">提交答案</button>
+
+<script>
+  // 定义学号，用于在提交答案时作为参数之一
+  const userId = "2021150047";
+  // 定义基础URL，所有API请求都基于此URL
+  const baseURL = "http://172.31.73.236:5525";
+  // 定义全局变量questions，用于存储从服务器获取的问题
+  let questions = [];
+
+  // 乱序函数， Fisher-Yates 洗牌算法，用于打乱数组顺序，返回打乱后的数组
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  // 获取题目并渲染
+  function fetchQuestions() {
+    // 使用jQuery的get方法发送GET请求获取题目数据
+    $.get(baseURL + "/questions", function (response) {
+      // 判断请求是否成功
+      if (response.status === 200) {
+        // 如果成功，获取问题列表并调用renderQuestions函数进行渲染
+        questions = response.results.questions;
+        renderQuestions(questions);
+      } else {
+        // 如果失败，弹出提示信息
+        alert("获取题目失败");
+      }
+    });
+  }
+
+  // 渲染题目
+  function renderQuestions(questions) {
+    // 获取问题容器的jQuery对象
+    const container = $("#questions-container");
+    // 清空容器中的旧内容
+    container.empty();
+
+    // 遍历questions数组，生成每个题目的HTML并追加到container中
+    questions.forEach(question => {
+      // 获取当前问题的ID
+      const questionId = question.questionId;
+      // 打乱当前问题的选项顺序
+      const options = shuffle([...question.options]);
+      // 生成当前问题的HTML结构
+      const questionHTML = `
+          <div class="question" data-question-id="${questionId}">
+              <h3>${question.question}</h3>
+              ${options.map((option, index) => `
+                  <div>
+                      <!-- 使用$("<div>").text(option).html()对选项进行编码，防止XSS攻击 -->
+                      <input type="radio" name="question-${questionId}" value="${$("<div>").text(option).html()}" id="question-${questionId}-option-${index}"/>
+                      <label for="question-${questionId}-option-${index}">${$("<div>").text(option).html()}</label>
+                  </div>
+              `).join('')}
+          </div>
+        `;
+      // 将生成的HTML结构追加到容器中
+      container.append(questionHTML);
+    });
+  }
+
+  // 提交答案
+  $("#submit-button").click(function () {
+    // 定义用于存储用户答案的数组
+    const answersPayload = [];
+    // 遍历每个问题，收集用户的选择
+    $(".question").each(function () {
+      // 获取当前问题的ID
+      const questionId = $(this).data("question-id");
+      // 获取用户选择的选项的值
+      const selectedOption = $(`input[name="question-${questionId}"]:checked`).val();
+      // 如果用户选择了选项，将其添加到答案数组中
+      if (selectedOption) {
+        answersPayload.push({
+          questionId: parseInt(questionId), // 确保questionId为整数
+          answer: [selectedOption] // 将选项值放入数组中
+        });
+      }
+    });
+
+    // 如果有未回答的问题，提示用户
+    if (answersPayload.length !== questions.length) {
+      alert("请回答所有问题");
+      return;
+    }
+
+    // 构建提交的payload对象
+    const payload = {
+      user_id: userId,
+      answers: answersPayload,
+    };
+
+    // 发送答案到服务器，同时根据返回结果，计算并alert提示
+    $.ajax({
+      url: baseURL + "/submit-answers", // 请求的URL
+      type: "POST", // 请求类型为POST
+      contentType: "application/json", // 请求的数据类型为JSON
+      data: JSON.stringify(payload), // 将payload对象序列化为JSON字符串
+      success: function (response) {
+        // 判断请求是否成功
+        if (response.status === 200) {
+          // 获取服务器返回的结果
+          const results = response.results.results;
+          let incorrectCount = 0; // 初始化错误计数
+          results.forEach(result => {
+            // 遍历结果数组，统计错误的题目数量
+            if (!result.correct) {
+              incorrectCount++;
+            }
+          });
+          // 根据错误数量弹出不同的提示信息
+          if (incorrectCount === 0) {
+            alert("提交成功，恭喜你答对了。");
+          } else {
+            alert(`提交成功，但答错${incorrectCount}题。`);
+          }
+        } else {
+          // 请求失败时的提示信息
+          alert("提交失败");
+        }
+      },
+      error: function () {
+        // AJAX请求出错时的提示信息
+        alert("提交失败");
+      }
+    });
+  });
+
+  // 初始化时获取题目
+  fetchQuestions();
+</script>
+</body>
+</html>
