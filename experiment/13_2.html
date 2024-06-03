@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据展示系统</title>
+  <!-- 引入 Vue 3 和 Element Plus -->
+  <script src="http://172.31.73.236/assets/vue@3.2.31.js"></script>
+  <link rel="stylesheet" href="http://172.31.73.236/assets/element-plus@2.2.21.css">
+  <script src="http://172.31.73.236/assets/element-plus@2.2.21.js"></script>
+  <style>
+    .search-bar {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="search-bar">
+    <!-- 使用双向绑定searchQuery变量 -->
+    <el-input v-model="searchQuery" placeholder="搜索名称..."></el-input>
+    <el-button @click="resetSearch">重置</el-button>
+  </div>
+
+  <el-table :data="displayedData">
+    <!-- 给每个字段增设sortable属性，启用排序功能 -->
+    <el-table-column prop="name" label="名称" sortable></el-table-column>
+    <el-table-column prop="age" label="年龄" sortable></el-table-column>
+    <el-table-column prop="address" label="地址" sortable></el-table-column>
+  </el-table>
+
+  <!-- 绑定current-change事件为handlePageChange，绑定current-page、page-size、total属性(filteredData.length)，实现分页功能 -->
+  <el-pagination
+    layout="prev, pager, next"
+    :current-page="currentPage"
+    :page-size="pageSize"
+    :total="filteredData.length"
+    @current-change="handlePageChange"
+  >
+  </el-pagination>
+</div>
+
+<script>
+  const {createApp} = Vue;
+
+  createApp({
+    data() {
+      return {
+        items: [],  // 模拟数据获取
+        searchQuery: '',
+        currentPage: 1,
+        pageSize: 10,
+      };
+    },
+    computed: {
+      filteredData() {
+        let data = JSON.parse(JSON.stringify(this.items));
+        // 根据 this.searchQuery 实现搜索名称字段 name 过滤
+        if (this.searchQuery) {
+          data = data.filter(item => item.name.includes(this.searchQuery));
+        }
+        return data;
+      },
+      displayedData() {
+        // 根据this.currentPage、this.pageSize 计算当前页显示的数据
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        return this.filteredData.slice(start, end);
+      }
+    },
+    methods: {
+      fetchData() {
+        for (let i = 1; i <= 100; i++) {
+          this.items.push({
+            name: `名称${i}`,
+            age: Math.floor(Math.random() * 100),
+            address: `地址${i}`,
+          });
+        }
+      },
+      handlePageChange(page) {
+        this.currentPage = page;
+      },
+      resetSearch() {
+        this.searchQuery = '';
+      },
+    },
+    mounted() {
+      this.fetchData();
+    },
+  }).use(ElementPlus).mount('#app');
+</script>
+</body>
+</html>
