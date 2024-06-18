@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>持续下拉列表</title>
+  <!-- 引入 Vue 3 和 Element Plus -->
+  <script src="http://172.31.73.236/assets/vue@3.2.31.js"></script>
+  <link
+    rel="stylesheet"
+    href="http://172.31.73.236/assets/element-plus@2.2.21.css"
+  />
+  <script src="http://172.31.73.236/assets/element-plus@2.2.21.js"></script>
+  <style>
+    .list-item-container {
+      /* TODO 实现 flex 布局，纵向排列，水平居中对齐 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      margin-bottom: 20px;
+    }
+
+    .list-item {
+      display: flex;
+      max-height: 500px;
+      max-width: 80%;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .list-item img,
+    .list-item video,
+    .list-item audio {
+      width: auto;
+      height: auto;
+      /* TODO 设置图片、视频、音频等元素的最大宽度为父级元素宽度的70%、 最大高度500px，并设置object-fit为contain 保持纵横比不变，且内容不被剪切 */
+      max-width: 70%;
+      max-height: 500px;
+      object-fit: contain;
+
+    }
+
+    .list-item-content {
+      flex: 1;
+      padding: 10px;
+    }
+
+    .list-item-content h3 {
+      margin: 0;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .list-item-content p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 5px solid #4caf50;
+      border-top: 5px solid white;
+      /* TODO 搬运实验5.1 加载元素.loader的实现，应用动画spin */
+      animation: spin 2s ease-in-out infinite;
+    }
+
+    /* TODO 搬运实验5.1 动画spin声明 */
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .tip {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <div>
+    <h2>无限下拉列表</h2>
+    <div class="list-item-container" v-for="item in files" :key="item.filename">
+      <div class="list-item">
+
+        <!-- TODO：根据文件名后缀判断应该渲染为 img、video 还是 audio ，否则渲染div包裹的文件名 item.filename -->
+        <img v-if="isImage(item.filename)" :src="fileUrl(item.filename)"/>
+        <video v-else-if="isVideo(item.filename)" :src="fileUrl(item.filename)" controls></video>
+        <audio v-else-if="isAudio(item.filename)" :src="fileUrl(item.filename)" controls></audio>
+        <div v-else>{{ item.filename }}</div>
+
+        <!-- 卡片右侧内容 -->
+        <div class="list-item-content">
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.content }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <!-- 若loading状态，则设置class为loader的加载元素 -->
+      <div v-if="loading" class="loader"></div>
+      <!-- 若noMoreData状态，则显示"No More"文本 -->
+      <div v-if="noMoreData">No More</div>
+      <!-- 否则显示加载更多按钮 -->
+      <el-button v-else @click="loadMore">加载更多</el-button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const {createApp} = Vue;
+
+  createApp({
+    data() {
+      return {
+        files: [],
+        page: 1,
+        loading: false, // 表示是否正在加载
+        noMoreData: false, // 表示是否已经没有更多的数据了
+      };
+    },
+    methods: {
+      async loadMore() {
+        // 总-TODO 实现loadMore方法，请求数据，并更新files
+        // 分-TODO 请求数据前，需要判断是否正在加载中 或者 是否已经没有更多数据了，避免重复请求；并且更新加载状态
+        if (this.loading || this.noMoreData) return;
+        this.loading = true;
+
+        // 分-TODO 请求数据 http://172.31.73.236:5617/exp15/query_list GET方法 带有page参数
+        try {
+          const response = await fetch(`http://172.31.73.236:5617/exp15/query_list?page=${this.page}`);
+          const data = await response.json();
+          if (data.status === 200) {
+            this.files.push(...data.results.items);
+            this.noMoreData = !data.results.has_next;
+            this.page++;
+          }
+        } catch (error) {
+          console.error('加载数据出错:', error);
+        } finally {
+          this.loading = false;
+        }
+
+      },
+      isImage(filename) {
+        // TODO 判断是否是jpg、png、gif格式的图片
+        return /\.(jpg|png|gif)$/i.test(filename);
+      },
+      isVideo(filename) {
+        return /\.mp4$/i.test(filename);
+      },
+      isAudio(filename) {
+        return /\.mp3$/i.test(filename);
+      },
+      fileUrl(fileName) {
+        return `http://172.31.73.236:5617/exp15/files/${fileName}`;
+      },
+    },
+    mounted() {
+      // 页面加载时首先loadMore
+      this.loadMore();
+      window.addEventListener("scroll", () => {
+        // TODO 绑定滚动事件，若滚动到底部(或者接近底部50px)，则loadMore
+        // 注意：需要判断是否正在加载数据，避免重复请求
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+          this.loadMore();
+        }
+
+      });
+    },
+  })
+    .use(ElementPlus)
+    .mount("#app");
+</script>
+</body>
+</html>

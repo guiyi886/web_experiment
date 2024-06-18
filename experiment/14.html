@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>文件上传与展示</title>
+  <!-- 引入 Vue 3 和 Element Plus -->
+  <script src="http://172.31.73.236/assets/vue@3.2.31.js"></script>
+  <link
+    rel="stylesheet"
+    href="http://172.31.73.236/assets/element-plus@2.2.21.css"
+  />
+  <script src="http://172.31.73.236/assets/element-plus@2.2.21.js"></script>
+</head>
+
+<body>
+<div id="app">
+  <div>
+    <h2>上传区</h2>
+    <!-- TODO方案1：使用ElementPlus 的 el-upload组件 绑定on-success、before-upload、action、data .(可选drag属性) 参考文档：https://element-plus.org/zh-CN/component/upload.html -->
+    <!-- TODO方案2：使用HTML5 input标签 限定type='file' 绑定@change事件 -->
+    <!-- 相同的上传要求：
+          1. 一次只能选择一个文件
+          2. 文件类型限制：图片（jpg、png）、视频（mp4）、音频（mp3）
+          3. 文件大小限制：不超过5M。
+          4. 若上传失败:
+            4.1 使用element-plus的message提示用户。
+            4.2 若大小超出限制，提示用户“文件大小超过限制”。调用方法：this.$message.error(msg)
+            4.3 若类型不符合要求，提示用户“文件格式不支持”。调用方法：this.$message.error(msg)
+          5. 若上传成功: 需要使用element-plus的message提示用户。调用方法：this.$message.success(msg)
+    -->
+    <el-upload
+      ref="upload"
+      class="upload-demo"
+      action="http://172.31.73.236:5617/exp14/upload"
+      :data="{ user_id: user_id }"
+      :before-upload="beforeUpload"
+      :on-success="handleSuccess"
+      :on-error="handleError"
+      :limit="1"
+      drag
+    >
+      <el-button type="primary">点击上传</el-button>
+    </el-upload>
+  </div>
+
+  <div>
+    <h2 style="display: inline-block">展示区</h2>
+    <el-button @click="fetchFiles" style="float: right">刷新文件列表</el-button>
+    <el-table :data="files" style="width: 100%">
+      <!-- TODO：设置文件名列的`prop`属性为`name`，`label`属性为`文件名`。 -->
+      <el-table-column prop="name" label="文件名"></el-table-column>
+
+      <el-table-column label="预览">
+        <template #default="scope">
+          <!-- TODO：根据文件类型显示不同的预览内容，参考文档内的`自定义列模板`：https://element-plus.org/zh-CN/component/table.html#%E5%B1%9E%E6%80%A7 -->
+          <!-- 通过条件判断动态渲染img、video、audio。设置宽度100px 。 注意此时的文件名为 scope.row.name -->
+          <div v-if="isImage(scope.row.name)">
+            <img :src="fileUrl(scope.row.name)" style="width: 100px"/>
+          </div>
+          <div v-else-if="isVideo(scope.row.name)">
+            <video :src="fileUrl(scope.row.name)" controls style="width: 100px"></video>
+          </div>
+          <div v-else-if="isAudio(scope.row.name)">
+            <audio :src="fileUrl(scope.row.name)" controls style="width: 100px"></audio>
+          </div>
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="expiry" label="过期时间"></el-table-column>
+
+      <el-table-column label="操作">
+        <template #default="scope">
+          <el-button class="download-button" @click="downloadFile(scope.row.name)">查看</el-button>
+          <el-button class="delete-button" @click="deleteFile(scope.row.name)" type="danger">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+  </div>
+</div>
+
+<script>
+  const {createApp} = Vue;
+
+  createApp({
+    data() {
+      return {
+        user_id: "2021150047", // 这里填入你的学号
+        files: [],
+      };
+    },
+    methods: {
+      downloadFile(fileName) {
+        const link = document.createElement("a");
+        link.href = `http://172.31.73.236:5617/exp14/files/${fileName}`;
+        link.download = fileName;
+        link.click();
+      },
+      // 发起GET请求，刷新当前文件列表
+      fetchFiles() {
+        fetch(
+          `http://172.31.73.236:5617/exp14/files?user_id=${this.user_id}`,
+          {
+            method: "GET",
+          }
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === 200) {
+              this.files = data.results.files;
+            } else {
+              this.$message.error(data.message);
+            }
+          });
+      },
+      deleteFile(filename) {
+        // TODO: 删除文件
+        // 发起DELETE请求到URL`http://172.31.73.236:5617/exp14/delete/${filename}?user_id=${this.user_id}`，
+        // 删除成功和失败后都要做消息提示，刷新文件列表
+        fetch(`http://172.31.73.236:5617/exp14/delete/${filename}?user_id=${this.user_id}`, {method: "DELETE"})
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === 200) {
+              this.$message.success(data.message);
+              this.fetchFiles();
+            } else {
+              this.$message.error(data.message);
+              this.fetchFiles();
+            }
+          });
+      },
+      // 根据文件名获取文件链接
+      fileUrl(fileName) {
+        return `http://172.31.73.236:5617/exp14/files/${fileName}`;
+      },
+      // TODO 其余需要自定义的上传文件等函数可以继续写在这里。
+      beforeUpload(file) {
+        const isLt5M = file.size / 1024 / 1024 < 5;
+        if (!isLt5M) {
+          this.$message.error('文件大小超过限制');
+          return false;
+        }
+        const validTypes = ['image/jpeg', 'image/png', 'video/mp4', 'audio/mpeg'];
+        if (!validTypes.includes(file.type)) {
+          this.$message.error('文件格式不支持');
+          return false;
+        }
+        return true;
+      },
+      handleSuccess(response, file, fileList) {
+        if (response.status === 200) {
+          this.$message.success(response.message);
+          this.fetchFiles();
+          this.$refs.upload.clearFiles(); //上传成功之后清除历史记录
+        } else {
+          this.$message.error(response.message);
+        }
+        // 刷新页面
+        // location.reload();
+      },
+      handleError(err, file, fileList) {
+        this.$message.error(err.message);
+      },
+      isImage(fileName) {
+        return /\.(jpg|png)$/i.test(fileName);
+      },
+      isVideo(fileName) {
+        return /\.mp4$/i.test(fileName);
+      },
+      isAudio(fileName) {
+        return /\.mp3$/i.test(fileName);
+      }
+    },
+    mounted() {
+      this.fetchFiles();
+    },
+  })
+    .use(ElementPlus)
+    .mount("#app");
+</script>
+</body>
+</html>
